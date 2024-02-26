@@ -1,4 +1,4 @@
 /node_modules
+/checker
 shoplifting-best.onnx
 /shoplifting-best_saved_model
-/checker
