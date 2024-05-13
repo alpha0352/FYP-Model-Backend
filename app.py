@@ -17,8 +17,6 @@ CORS(app)
 socketio.init_app(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-
-
 personModel = YOLO('yolov8n.pt')  # Assuming model for detecting persons
 shopliftingModel = YOLO('shoplifting-best.pt')  # Load the model for the other class
 robberyModel = YOLO('robbery-best.pt')  # Load the model for the other class
@@ -52,33 +50,12 @@ def start_video():
 def process():
     return jsonify({"msg":"Video received", "status":200})
 
-
-# @app.route("/api/livevideo",methods=["POST","GET"])
-# def process_live():
-#     print("Hi")
-#     vid = cv2.VideoCapture(0)  # Access webcam
-#     while True:
-#         ret, frame = vid.read()
-#         confidence_threshold = 0.5
-#         shoplifting_threshold = 0.5
-#         # input_data = preprocess_frame(frame)
-#         # output_data = session.run(None, input_data)
-#         # processed_frame = visualize_predictions(frame, output_data)
-#         # _, encoded_frame = cv2.imencode('.jpg', processed_frame)
-#         # yield (b'--frame\r\n'
-#         #         b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encoded_frame) + b'\r\n')
-
-
-
 def process_live_shoplifting(videolink,threshold=0.4):
-#     data = request.get_json()
-#     print(data['videolink'])
-    # chunk_size = 20
+
     print("func started")
     global flag
     flag = True
     video = cv2.VideoCapture(videolink)
-#     print(video)
     video_frames = []
     print("Video started")
     confidence_threshold = threshold
@@ -136,29 +113,16 @@ def process_live_shoplifting(videolink,threshold=0.4):
                                 cv2.rectangle(frame, (xyxys[0], xyxys[1]), (xyxys[2], xyxys[3]), (0, 255, 0), 2)
         _, encoded_frame = cv2.imencode('.jpg', frame)
         video_frames.append(encoded_frame.tobytes())
-        # socketio.emit("frames",{"frame":encoded_frame.tobytes()})
-        # cv2.imshow('frame',frame)
-        # return encoded_frame.tobytes()
-        # if cv2.waitKey(1) & 0xFF == ord('q'): 
-        #     break
-        
+
         yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + encoded_frame.tobytes() + b'\r\n')
         # video_frames.append(frame)                                
     socketio.emit("videocompleted")    
 
-#     return jsonify({"msg":"Video received", "status":200})
-
-
-
 def process_live_robbery(videolink,threshold=0.4):
-    #     data = request.get_json()
-#     print(data['videolink'])
-    # chunk_size = 20
     print("func started")
     global flag
     flag = True
     video = cv2.VideoCapture(videolink)
-#     print(video)
     video_frames = []
     print("Video started")
     # confidence_threshold = 0.5
@@ -208,24 +172,12 @@ def process_live_robbery(videolink,threshold=0.4):
                     socketio.emit("Anamoly", {"Class": "Robbery","Coordinates" : str(123)})
                 elif class_detected == "Normal" and class_conf_dict[0] >= robbery_threshold:
                     pass
-                    # cv2.putText(frame, f"{class_detected}: {class_conf_dict[max(class_conf_dict, key=class_conf_dict.get)]:.2f}%",
-                            # (xyxys[0] + 5, xyxys[1]- 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-                    # cv2.rectangle(frame, (xyxys[0], xyxys[1]), (xyxys[2], xyxys[3]), (0, 255, 0), 2)
         _, encoded_frame = cv2.imencode('.jpg', frame)
-        video_frames.append(encoded_frame.tobytes())
-        # cv2.imshow('frame',frame)
-        # return encoded_frame.tobytes()
-        # if cv2.waitKey(1) & 0xFF == ord('q'): 
-        #     break
-        
+        video_frames.append(encoded_frame.tobytes())        
         yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + encoded_frame.tobytes() + b'\r\n')
         # video_frames.append(frame)                                
     socketio.emit("videocompleted")    
-
 #     return jsonify({"msg":"Video received", "status":200})
-
-
-
     
 @app.route("/api/livevideo/<model>/<threshold>")
 def video_feed(model,threshold):
@@ -247,45 +199,7 @@ def analyze_video(model,threshold,videoParam1,videoParam2):
         return Response(process_live_shoplifting(video,int(threshold)/100),mimetype='multipart/x-mixed-replace; boundary=frame')
     if(model == "robbery"):
         return Response(process_live_robbery(video,int(threshold)/100),mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-
-
-
-# @app.route("/api/livevideo")
-# def video_feed():
-#     print("Hi")
-#     return Response(process_live(),mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-
+    
 if __name__ == "__main__":
     print("Hello world")
     socketio.run(app,host='0.0.0.0',port=8000,debug=True)
-    
-
-
-# app = Flask(__name__)
-# socketio = SocketIO(app)
-# CORS(app)
-# socketio.init_app(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
-
-
-
-# @socketio.on('connect')
-# def handle_connect():
-#     print('Client connected!')
-#     # emit('connect', data={'message': 'Welcome to the server!'})
-
-# @socketio.on('disconnect')
-# def handle_disconnect():
-#     print('Client disconnected!')
-
-# @socketio.on('message')
-# def handle_message(data):
-#     print('Received message from client:', data)
-#     emit('message', data, broadcast=True) 
-
-# if __name__ == "__main__":
-#     print("Hello world")
-#     socketio.run(app,host='0.0.0.0',port=8000,debug=True)
